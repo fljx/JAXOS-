@@ -16,6 +16,7 @@ public:
 	{}
 
 	void	on( );
+	void	on( int16_t period );
 	void	off( );
 
 protected:
@@ -26,11 +27,11 @@ protected:
 
 
 template< uint8_t Bit, Port_BaseAddr Port >
-class	ToggleIO	:	public	TimedIO< PeriodicThread, Bit, Port >
+class	ToggleIO	:	public	TimedIO< PeriodicThread< VoidContext >, Bit, Port >
 {
 public:
 	ToggleIO( int16_t period )
-	:	TimedIO< PeriodicThread, Bit, Port >( period )
+	:	TimedIO< PeriodicThread< VoidContext >, Bit, Port >( period )
 	{}
 
 	void	exec( );
@@ -39,11 +40,11 @@ public:
 
 
 template< uint8_t Bit, Port_BaseAddr Port >
-class	OneShotIO	:	public	TimedIO< OneShotThread, Bit, Port >
+class	OneShotIO	:	public	TimedIO< OneShotThread< VoidContext >, Bit, Port >
 {
 public:
 	OneShotIO( int16_t period )
-	:	TimedIO< OneShotThread, Bit, Port >( period )
+	:	TimedIO< OneShotThread< VoidContext >, Bit, Port >( period )
 	{}
 
 	void	exec( )		{	this->off( );	}

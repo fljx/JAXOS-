@@ -7,14 +7,13 @@
 #include	<avr/io.h>
 #include	"iomxx0_1.hpp"
 
-#include	<drivers/uart.h>	//;;;;
 
 //-------------------------------------------------------------
 //------------- Button ----------------------------------------
 //-------------------------------------------------------------
 
-template< uint8_t ButtonBit >
-Button< ButtonBit >::Button( )
+template< uint8_t ButtonBit, typename PinType >
+Button< ButtonBit, PinType >::Button( )
 {
 	Bit::interruptOn( );
 	Bit::input( );	// Pin as input.
@@ -24,10 +23,10 @@ Button< ButtonBit >::Button( )
 //------------- NotifyingButton -------------------------------
 //-------------------------------------------------------------
 
-template< uint8_t ButtonBit, uint8_t MessageHeader, uint16_t DebounceTime >
-NotifyingButton< ButtonBit, MessageHeader, DebounceTime >::NotifyingButton( INotifier< data16 > &notifier )
+template< uint8_t ButtonBit, uint8_t MessageHeader, uint16_t DebounceTime, typename PinType >
+NotifyingButton< ButtonBit, MessageHeader, DebounceTime, PinType >::NotifyingButton( INotifier< data16 > &notifier )
 	:	Button< ButtonBit >::Button( ),
-		OneShotThread( DebounceTime ),
+		OneShotThread< VoidContext >( DebounceTime ),
 		notifier( notifier )
 {
 }
@@ -38,28 +37,27 @@ NotifyingButton< ButtonBit, MessageHeader, DebounceTime >::NotifyingButton( INot
 	before reading its actual state for debouncing.
 	Any further interrupt will be ignored.
 */
-template< uint8_t ButtonBit, uint8_t MessageHeader, uint16_t DebounceTime >
-void NotifyingButton< ButtonBit, MessageHeader, DebounceTime >::exec( )
+template< uint8_t ButtonBit, uint8_t MessageHeader, uint16_t DebounceTime, typename PinType >
+void NotifyingButton< ButtonBit, MessageHeader, DebounceTime, PinType >::exec( )
 {
 	bool curr_state = this->status( );
 
 	if ( button_state != curr_state )
 	{
 		button_state = curr_state;
-//uart1.put( button_state ? ':' : '.' );	//;;;;
 		notifier.notify( data16( MessageHeader, ( button_state ? 0x80 : 0x00 ) | ButtonBit ) );
 	}
-	OneShotThread::exec( );				// Thread will stop after this.
+	OneShotThread< VoidContext >::exec( );				// Thread will stop after this.
 }
 
 /**	Start Button press or release monitoring.
 
 	Actual button reading will be done later in Thread::exec( ) for debouncing.
 */
-template< uint8_t ButtonBit, uint8_t MessageHeader, uint16_t DebounceTime >
-void	NotifyingButton< ButtonBit, MessageHeader, DebounceTime >::change( )
+template< uint8_t ButtonBit, uint8_t MessageHeader, uint16_t DebounceTime, typename PinType >
+void	NotifyingButton< ButtonBit, MessageHeader, DebounceTime, PinType >::change( )
 {
-	if ( Thread::state == Stopped )			// If not Stopped, already debouncing.
+	if ( this->state( ) == Stopped )			// If not Stopped, already debouncing.
 		this->sleep( _period );			// Reset timer and prepare to run the Thread.
 }
 
@@ -70,7 +68,7 @@ void	NotifyingButton< ButtonBit, MessageHeader, DebounceTime >::change( )
 
 template< uint8_t ButtonBit0, uint8_t ButtonBit1, uint8_t MessageHeader >
 Bimanual< ButtonBit0, ButtonBit1, MessageHeader >::Bimanual( INotifier< data16 > &notifier )
-	:	OneShotThread( 500 ),
+	:	OneShotThread< VoidContext >( 500 ),
 		notifier( notifier ),
 		button0( notifier ), button1( notifier )
 {

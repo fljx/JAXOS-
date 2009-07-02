@@ -52,6 +52,7 @@ protected:
 
 	void	send_bit( );
 	void	recv_bit( );
+	void	append_bit( bool bit );
 	void	wait_idle( );
 
 	typedef	IntPinIO< BitNo >	Pin;

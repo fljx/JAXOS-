@@ -1,47 +1,27 @@
-#include	"kernel/thread.h"
-#include	"kernel/scheduler.h"
+#ifndef _THREAD_CPP
+	#define _THREAD_CPP
+
+#include	<kernel/thread.h>
+#include	<kernel/scheduler.h>
 
 
-Thread::Thread( )
-:	state( Stopped )
+template< typename ContextType >
+Thread< ContextType >::Thread( )
+:	_state( Stopped )
 {
 	Scheduler<>::add( *this );
 }
 
-
-Thread::~Thread( )
+template< typename ContextType >
+Thread< ContextType >::~Thread( )
 {
 	Scheduler<>::remove( *this );
 }
 
-
-
-///	Suspend the Thread execution for "_period" ms.
-void	TimedThread::sleep( int16_t period )
+template< typename ContextType >
+void	Thread< ContextType >::yield( )
 {
-	_per_count = period;
-	state = Sleeping;
+	Scheduler<>::schedule( );
 }
 
-
-/**	Tells if it is time to run the thread.
-	Counts base-time clocks (e.g. 1ms) till the thread time.
-*/
-bool	TimedThread::ring( )
-{
-	return ( ( state == Sleeping || state == Running ) && ( --_per_count == 0 ) );
-}
-
-
-///	Sleep the Thread until the next "period" elapse.
-void	PeriodicThread::exec( )
-{
-	sleep( _period );
-}
-
-
-///	Stop the Thread after executing once.
-void	OneShotThread::exec( )
-{
-	stop( );
-}
+#endif // _THREAD_CPP

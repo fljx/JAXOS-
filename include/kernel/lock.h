@@ -22,24 +22,5 @@ private:
 	Mutex &mutex; //!< Member variable "&mutex"
 };
 
-//
-//class Singleton
-//{   public:
-//        static Singleton *	GetInstance();
-//        int a;
-//
-//    private:
-//        Singleton( )	{	}
-//        ~Singleton( )	{	}
-//
-//        static Mutex	mutex;
-//
-//        // Not defined, to prevent copying
-//        Singleton( const Singleton& );
-//        Singleton& operator =( const Singleton& other );
-//};
-//
-//Mutex	Singleton::mutex;
-
 
 #endif // __LOCK_H

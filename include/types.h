@@ -84,10 +84,7 @@ union	bitfield8
 		return	byte & ( 1 << i );
 	}
 
-//	operator	uint8_t( )	const	{	return	byte;	}
 	operator	uint8_t&( )	{	return	byte;	}
-//	bitfield8	operator=( uint8_t b )	{	byte = b;	return *this;	}
-//	bitfield8	operator^=( uint8_t b )	{	byte ^= b;	return *this;	}
 };
 
 

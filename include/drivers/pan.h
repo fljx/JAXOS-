@@ -10,8 +10,16 @@
 #include	<drivers/pan_helper.h>
 
 
+class IPAN
+{
+public:
+	virtual bool	get( PAN_data &data ) = 0;
+	virtual bool	put( PAN_data data ) = 0;
+};
+
+
 template< uint8_t BitNo, uint8_t RxBufferSize = 8, uint8_t TxBufferSize = 8 >
-class PAN	:	public	PAN_Base< BitNo >
+class PAN	:	public	PAN_Base< BitNo >, public IPAN
 {
 public:
 	PAN( );

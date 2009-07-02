@@ -2,46 +2,55 @@
 	#define _THREAD_H
 
 
-#include	"types.h"
+//#include	"types.h"
+#include	<kernel/ithread.h>
+#include	<kernel/context.h>
 
 
-class	Thread
+
+//-----------------------------------------------------------------------------
+template< typename ContextType = FullContext >
+class Thread	:	IThread
 {
 public:
 	Thread( );
+	virtual ~Thread( );
 
-	~Thread( );
+	virtual void	run( )		{	_state = Running;	}	///<	Puts the thread in "Running" state.
+	virtual void	stop( )		{	_state = Stopped;	}	///<	Puts the thread in "Stopped" state.
+	virtual void	pause( )	{	_state = Paused;		}	///<	Puts the thread in "Paused" state.
 
-	virtual void	exec( ) = 0;							///<	Executes the thread code.
-	virtual void	run( )		{	state = Running;	}	///<	Puts the thread in "Running" state.
-	virtual void	stop( )		{	state = Stopped;	}	///<	Puts the thread in "Stopped" state.
-	virtual void	pause( )	{	state = Paused;	}		///<	Puts the thread in "Paused" state.
+	inline void context_load( )
+	{		ContextType::load( );	}
+
+	inline void context_save( )
+	{		ContextType::save( );	}
+
+	State state( )
+	{	return	_state;	}
+
+	static inline void	yield( )	__attribute__(( always_inline ));
 
 protected:
-	enum	State
-	{
-		Stopped,		///<	Thread is not running anyway.
-		Running,		///<	Thread is running or ready to.
-		Waiting,		///<	Thread is waiting some event to run.
-		Sleeping,
-		Paused			///<	Thread was explicitly paused and will only run again by an explicit "run()".
-	};
 
-	State	state;
-
-	template< uint8_t MaxTasks > friend class Scheduler;
-
-	virtual bool	ring( ) = 0;	///<	Placeholder to a "waking" signal.
+	State	_state;
 };
 
 
-/// Abstract class for threads that depend on a time-base to run.
-class	TimedThread	:	public	Thread
+//-----------------------------------------------------------------------------
+template< typename ContextType = FullContext >
+class TimedThread	:	public Thread< ContextType >
 {
 public:
 	TimedThread( int16_t period )
-	:	Thread( ), _period( period )
-	{}
+	:	Thread< ContextType >( ), _period( period )
+	{	}
+
+	virtual ~TimedThread( )
+	{	}
+
+	void	exec( )
+	{	}
 
 	virtual void	sleep( int16_t period );				///<	Suspend the Thread execution for "period" ms.
 
@@ -53,28 +62,57 @@ protected:
 };
 
 
+template< class ContextType >
+void	TimedThread< ContextType >::sleep( int16_t period )
+{
+	_per_count = period;
+	this->_state = IThread::Sleeping;
+}
+
+template< class ContextType >
+bool	TimedThread< ContextType >::ring( )
+{
+	return ( ( this->_state == IThread::Sleeping ||
+		this->_state == IThread::Running ) && ( --_per_count == 0 ) );
+}
+
+//-----------------------------------------------------------------------------
 /// TimedThread that runs continuously.
-class	PeriodicThread	:	public	TimedThread
+template< typename ContextType = FullContext >
+class PeriodicThread	:	public TimedThread< ContextType >
 {
 public:
 	PeriodicThread( int16_t period )
-	:	TimedThread( period )
-	{}
+	:	TimedThread< ContextType >( period )
+	{	}
 
-	void	exec( );
+	virtual ~PeriodicThread( )
+	{	}
+
+	void	exec( )
+	{	sleep( this->_period );	}
 };
 
-
+//-----------------------------------------------------------------------------
 /// TimedThread that runs once on its time-base then goes "Stopped".
-class	OneShotThread	:	public	TimedThread
+template< typename ContextType = FullContext >
+class OneShotThread	:	public TimedThread< ContextType >
 {
 public:
 	OneShotThread( int16_t period )
-	:	TimedThread( period )
-	{}
+	:	TimedThread< ContextType >( period )
+	{	}
 
-	void	exec( );
+	virtual ~OneShotThread( )
+	{	}
+
+	void	exec( )
+	{	}
 };
+
+//-----------------------------------------------------------------------------
+
+	#include	<../kernel/thread.cpp>
 
 
 #endif // _THREAD_H

@@ -20,7 +20,11 @@
 #define serTX_INT_ENABLE		( ( unsigned char )_BV( UDRIE1 ) )	// 0x20
 
 /// Constants for writing to UCSRC.
-#define serUCSRC_SELECT			( ( unsigned char )_BV( UMSEL11 ) )	// 0x80
+#if defined (__AVR_ATmega128__)
+	#define serUCSRC_SELECT			( ( unsigned char )0x80 )			// _BV( UMSEL1 ) UMSEL1
+#else		// Defaults to ATmega1281
+	#define serUCSRC_SELECT			( ( unsigned char )_BV( UMSEL01 ) )	// !!! UMSEL11 !!!
+#endif
 #define serEIGHT_DATA_BITS		( ( unsigned char )_BV( UCSZ11 ) | _BV( UCSZ10 ) )	// 0x06
 
 

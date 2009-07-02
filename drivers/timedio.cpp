@@ -13,7 +13,17 @@ void TimedIO< ThreadType, Bit, Port >::on( )
 {
 	IOPort< Port >::bitOn( Bit );
 
-	sleep( this->_period );	// Sleep until "period" elapsed.
+	this->sleep( this->_period );	// Sleep until "period" elapsed.
+}
+
+///	Turn on IO. It will turn off after "period" ms.
+template< typename ThreadType, uint8_t Bit, Port_BaseAddr Port >
+void TimedIO< ThreadType, Bit, Port >::on( int16_t period )
+{
+	IOPort< Port >::bitOn( Bit );
+
+	this->_period = period;
+	this->sleep( period );	// Sleep until "period" elapsed.
 }
 
 ///	Turn off IO and stop the Thread.
@@ -39,7 +49,7 @@ template< uint8_t Bit, Port_BaseAddr Port >
 void	ToggleIO< Bit, Port >::exec( )
 {
 	toggle( );
-	PeriodicThread::exec( );		// Put Thread back to sleep.
+	PeriodicThread< VoidContext >::exec( );		// Put Thread back to sleep.
 }
 
 

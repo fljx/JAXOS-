@@ -27,6 +27,7 @@ protected:
 /// Abstract base class for all devices that can be turned ON or OFF.
 class	OnOffDev
 {
+public:
 	virtual void	on( ) = 0;
 	virtual void	off( ) = 0;
 };

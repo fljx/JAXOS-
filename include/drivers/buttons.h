@@ -14,7 +14,7 @@
 	\note	Actual transition sensing is done in a hardware interrupt not contained in this class.
 	\param	ButtonBit	Hardware bit number where the button is sensed.
 */
-template< uint8_t ButtonBit >
+template< uint8_t ButtonBit, typename PinType = PinChangeIO< ButtonBit > >
 class Button
 {
 public:
@@ -26,8 +26,8 @@ public:
 	{	return	Bit::val( );	}
 
 protected:
-	typedef	PinChangeIO< ButtonBit >	Bit;
-
+//	typedef	PinChangeIO< ButtonBit >	Bit;
+	typedef	PinType	Bit;
 };
 
 
@@ -38,8 +38,8 @@ protected:
 	\par	Byte 1:		b7: <ON|OFF>, b6: -; b5-b0: ButtonBit
 
 	\note	Debouncing is done in Thread ring event.	*/
-template< uint8_t ButtonBit, uint8_t MessageHeader, uint16_t DebounceTime = 10 >
-class NotifyingButton	:	public Button< ButtonBit >,	public OneShotThread
+template< uint8_t ButtonBit, uint8_t MessageHeader, uint16_t DebounceTime = 10, typename PinType = PinChangeIO< ButtonBit > >
+class NotifyingButton	:	public Button< ButtonBit, PinType >,	public OneShotThread< VoidContext >
 {
 public:
 	NotifyingButton( INotifier< data16 > &notifier );
@@ -56,11 +56,14 @@ protected:
 /**	Bimanual push button control.
 */
 template< uint8_t ButtonBit0, uint8_t ButtonBit1, uint8_t MessageHeader >
-class Bimanual	:	public OneShotThread, public INotifier< data16 >
+class Bimanual	:	public OneShotThread< VoidContext >, public INotifier< data16 >
 {
 public:
 	/// Default constructor.
 	Bimanual( INotifier< data16 > &notifier );
+
+    inline uint8_t status( ) const
+	{	return	uint8_t( button1.status( ) ) << 1 | uint8_t( button0.status( ) );	}
 
 	void	change( uint8_t changed );
 	void	exec( );
@@ -74,8 +77,6 @@ protected:
 	INotifier< data16 > &notifier;
 	volatile uint8_t	button_state;	///< Last state for both buttons (may change in an ISR, so volatile).
 
-//	NotifyingButton< ButtonBit0, 0 >	button0;
-//	NotifyingButton< ButtonBit1, 1 >	button1;
 	NotifyingButton< ButtonBit0, MessageHeader >	button0;
 	NotifyingButton< ButtonBit1, MessageHeader >	button1;
 

@@ -237,4 +237,6 @@ protected:
 };
 
 
+#define	BIT_OFFSET(Port,Bit)	( ( uint8_t )Port * 8 + Bit )
+
 #endif // _PORTS_H
